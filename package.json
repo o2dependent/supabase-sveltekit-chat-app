@@ -9,6 +9,7 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
+		"codegen": "source ./.env && npx supabase gen types typescript --project-id $VITE_SUPABASE_ID --schema public > src/types/supabase.ts",
 		"format": "prettier --plugin-search-dir . --write ."
 	},
 	"devDependencies": {

@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/auth-helpers-sveltekit';
 
 export const supabase = createClient(
-	import.meta.env?.VITE_SUPABASE_URL ?? '',
+	`https://${import.meta.env?.VITE_SUPABASE_ID ?? ''}.supabase.co`,
 	import.meta.env?.VITE_SUPABASE_ANON_KEY ?? ''
 );
