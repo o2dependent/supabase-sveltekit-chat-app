@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { supabase } from '$lib/supabaseClient';
+	import { avatarCache } from './avatarCache.store';
 
 	export let avatar_url: string | null;
 	export let full_name: string | null;
-	export let online: boolean;
+	export let online: boolean = false;
 
 	let isUrlLoading = true;
 
@@ -19,11 +20,25 @@
 
 	const loadUrl = async (avatar_url: string | null) => {
 		if (avatar_url) {
+			// check if url is in cache
+			const cachedUrl = $avatarCache[avatar_url];
+
+			if (cachedUrl) {
+				url = cachedUrl;
+				isUrlLoading = false;
+				return;
+			}
+
 			isUrlLoading = true;
 			const { data, error } = await supabase.storage.from('avatars').download(avatar_url);
 			if (error) throw error;
 
 			url = URL.createObjectURL(data);
+
+			// add url to cache
+			avatarCache.update((cache) => {
+				return { ...cache, [avatar_url]: url };
+			});
 
 			isUrlLoading = false;
 		} else {

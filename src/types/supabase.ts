@@ -9,7 +9,7 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      messages: {
+      direct_messages: {
         Row: {
           id: number
           created_at: string | null
