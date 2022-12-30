@@ -5,6 +5,7 @@
 	export let avatar_url: string | null;
 	export let full_name: string | null;
 	export let online: boolean = false;
+	export let skeleton: boolean = false;
 
 	let isUrlLoading = true;
 
@@ -19,7 +20,7 @@
 	let url = '';
 
 	const loadUrl = async (avatar_url: string | null) => {
-		if (avatar_url) {
+		if (avatar_url && !skeleton) {
 			// check if url is in cache
 			const cachedUrl = $avatarCache[avatar_url];
 
