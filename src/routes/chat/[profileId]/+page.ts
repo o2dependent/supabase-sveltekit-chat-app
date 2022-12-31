@@ -1,3 +1,4 @@
+import { supabase } from '$lib/supabaseClient';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ params, parent }) => {
@@ -7,7 +8,11 @@ export const load: PageLoad = async ({ params, parent }) => {
 		.sort((a, b) => a?.localeCompare(b ?? '') ?? 0)
 		.join('_');
 
-	console.log({ unsortedKey: [profile?.id, profileId], room_key, profileId });
+	const { data: initialMessages } = await supabase
+		.from('direct_messages')
+		.select('*')
+		.eq('room_key', room_key)
+		.order('created_at', { ascending: true });
 
-	return { profileId, room_key };
+	return { profileId, room_key, initialMessages };
 };

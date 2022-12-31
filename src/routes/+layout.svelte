@@ -47,7 +47,7 @@
 			</div>
 		</div>
 		<!-- Page content here -->
-		<main class="mx-auto container">
+		<main class="mx-auto container h-fit flex-grow">
 			<slot />
 		</main>
 	</div>
