@@ -51,7 +51,7 @@
 </script>
 
 <li class:online class="avatar placeholder">
-	<div class="bg-neutral-focus text-neutral-content rounded-full w-8 !p-0">
+	<div class="bg-neutral-focus text-neutral-content !rounded-full w-8 !p-0">
 		{#if isUrlLoading}
 			<span class="skeleton-loader" />
 		{:else if url}

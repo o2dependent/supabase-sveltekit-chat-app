@@ -56,6 +56,16 @@
 					filter: `room_key=eq.${room_key}`
 				},
 				(message) => {
+					if (message.new.sender_id === profile?.id) {
+						setTimeout(() => {
+							const top = scrollContainer?.scrollHeight - scrollContainer?.offsetHeight;
+							const behavior = top - scrollPosition >= 2000 ? 'auto' : 'smooth';
+							scrollContainer.scroll({
+								top,
+								behavior
+							});
+						}, 500);
+					}
 					messages = [...messages, message.new];
 				}
 			)
@@ -157,10 +167,12 @@
 					<button
 						type="button"
 						on:click={() => {
+							const top = scrollContainer?.scrollHeight - scrollContainer?.offsetHeight;
 							// scroll to bottom
+							console.log({ scrollPosition });
 							scrollContainer.scroll({
-								top: scrollContainer?.scrollHeight - scrollContainer?.offsetHeight,
-								behavior: 'smooth'
+								top,
+								behavior: top - scrollPosition >= 2000 ? 'auto' : 'smooth'
 							});
 						}}
 						class="alert py-2 w-fit shadow-md"

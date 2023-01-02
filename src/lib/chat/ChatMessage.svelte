@@ -50,6 +50,6 @@
 			<time class="text-xs opacity-50">{formatDistance(sent_at, new Date())}</time>
 		</div>
 	{/if}
-	<div class="chat-bubble">{text}</div>
+	<div class:chat-bubble-primary={is_me} class="chat-bubble">{text}</div>
 	<div class="hidden group-[.chat-end]:block chat-footer opacity-50">Delivered</div>
 </div>
