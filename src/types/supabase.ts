@@ -16,6 +16,7 @@ export interface Database {
           sender_id: string | null
           receiver_id: string | null
           text: string | null
+          room_key: string | null
         }
         Insert: {
           id?: number
@@ -23,6 +24,7 @@ export interface Database {
           sender_id?: string | null
           receiver_id?: string | null
           text?: string | null
+          room_key?: string | null
         }
         Update: {
           id?: number
@@ -30,6 +32,30 @@ export interface Database {
           sender_id?: string | null
           receiver_id?: string | null
           text?: string | null
+          room_key?: string | null
+        }
+      }
+      friends: {
+        Row: {
+          id: number
+          created_at: string | null
+          requester_id: string | null
+          user_id: string | null
+          status: string | null
+        }
+        Insert: {
+          id?: number
+          created_at?: string | null
+          requester_id?: string | null
+          user_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          id?: number
+          created_at?: string | null
+          requester_id?: string | null
+          user_id?: string | null
+          status?: string | null
         }
       }
       profiles: {
