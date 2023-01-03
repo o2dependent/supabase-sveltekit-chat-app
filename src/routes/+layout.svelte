@@ -4,10 +4,12 @@
 	import type { PageData } from './$types';
 
 	export let data: PageData;
+
+	let open = false;
 </script>
 
 <header class="drawer">
-	<input id="my-drawer-3" type="checkbox" class="drawer-toggle" />
+	<input bind:checked={open} id="my-drawer-3" type="checkbox" class="drawer-toggle" />
 	<div class="drawer-content flex flex-col">
 		<!-- Navbar -->
 		<div class="w-full bg-base-300">
@@ -40,7 +42,7 @@
 							<li>@{data.profile?.username}</li>
 						{:else}
 							<!-- Navbar menu content here -->
-							<li><a href="/login">Login</a></li>
+							<li><a on:click={() => (open = false)} href="/login">Login</a></li>
 						{/if}
 					</ul>
 				</div>
@@ -55,17 +57,25 @@
 		<label for="my-drawer-3" class="drawer-overlay" />
 		<ul class="menu p-4 w-80 bg-base-100">
 			{#if data?.session && data?.profile}
-				<li class="flex gap-4">
-					<div class="avatar online">
-						<div class="w-24 rounded-full">
-							<img src="https://placeimg.com/192/192/people" />
-						</div>
-					</div>
-					<p>@{data.profile?.username}</p>
+				<div>
+					<span class="flex gap-4">
+						<Avatar
+							full_name={data?.profile?.full_name}
+							avatar_url={data?.profile?.avatar_url}
+							online
+						/>
+						<p>@{data.profile?.username}</p>
+					</span>
+				</div>
+				<li>
+					<a on:click={() => (open = false)} href="/friend">Friends</a>
+				</li>
+				<li>
+					<a on:click={() => (open = false)} href="/chat">Chat</a>
 				</li>
 			{:else}
 				<!-- Navbar menu content here -->
-				<li><a href="/login">Login</a></li>
+				<li><a on:click={() => (open = false)} href="/login">Login</a></li>
 			{/if}
 		</ul>
 	</div>
