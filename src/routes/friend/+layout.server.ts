@@ -12,29 +12,38 @@ export const load: LayoutServerLoad = async ({ parent }) => {
 		throw redirect(307, '/');
 	}
 
-	const { data: friends } = await supabase
+	const { data: friends, error } = await supabase
 		.from('friends')
-		.select(`status, sender:sender_id(*), id`)
+		.select(`status, sender:friends_requester_id_fkey(*), id`)
 		.eq('user_id', profile?.id)
 		.eq('status', FriendsStatus.ACCEPTED)
 		.limit(25);
 
-	const { data: requests } = await supabase
+	console.log({ error });
+
+	const { data: requests, error: requestsError } = await supabase
 		.from('friends')
-		.select(`status, sender:sender_id(*), id`)
+		.select(`status, sender:profiles!friends_requester_id_fkey(*), id, user_id`)
 		.eq('user_id', profile?.id)
 		.eq('status', FriendsStatus.PENDING)
 		.limit(25);
-
+	console.log({
+		profile,
+		session,
+		friends,
+		requests,
+		requestsError,
+		'FriendsStatus.PENDING': FriendsStatus.PENDING
+	});
 	return {
 		friends: friends as
 			| (GetArrayType<typeof friends> & {
-					sender: { id: string; username: string; avatar_url: string };
+					sender: { id: string; username: string; avatar_url: string; full_name: string };
 			  })[]
 			| null,
 		requests: requests as
 			| (GetArrayType<typeof requests> & {
-					sender: { id: string; username: string; avatar_url: string };
+					sender: { id: string; username: string; avatar_url: string; full_name: string };
 			  })[]
 			| null
 	};

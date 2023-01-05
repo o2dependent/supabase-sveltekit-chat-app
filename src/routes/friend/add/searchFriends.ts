@@ -10,6 +10,8 @@ export const searchFriends = async (search_text: string, profile: Profile) => {
 			`*, outgoing_requests:friends!friends_user_id_fkey(id, status), incoming_requests:friends!friends_requester_id_fkey(id, status)`
 		)
 		.ilike('username', `%${search_text}%`)
+		.eq('outgoing_requests.requester_id', profile?.id)
+		.eq('incoming_requests.user_id', profile?.id)
 		.neq('id', profile?.id);
 	return newSearchedFriends;
 };
