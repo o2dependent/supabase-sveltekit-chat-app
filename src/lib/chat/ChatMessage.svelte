@@ -4,6 +4,7 @@
 	import { crossfade } from 'svelte/transition';
 	import Avatar from '$lib/profile/Avatar.svelte';
 	import { formatDistance } from 'date-fns';
+	import ChatTime from './ChatTime.svelte';
 
 	export let is_previous_sender: boolean;
 	export let is_next_sender: boolean;
@@ -47,7 +48,7 @@
 	{#if !is_previous_sender}
 		<div class="chat-header">
 			{full_name}
-			<time class="text-xs opacity-50">{formatDistance(sent_at, new Date())}</time>
+			<ChatTime {sent_at} />
 		</div>
 	{/if}
 	<div class:chat-bubble-primary={is_me} class="chat-bubble">{text}</div>

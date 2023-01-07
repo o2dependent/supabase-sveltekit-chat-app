@@ -19,22 +19,13 @@ export const load: LayoutServerLoad = async ({ parent }) => {
 		.eq('status', FriendsStatus.ACCEPTED)
 		.limit(25);
 
-	console.log({ error });
-
 	const { data: requests, error: requestsError } = await supabase
 		.from('friends')
 		.select(`status, sender:profiles!friends_requester_id_fkey(*), id, user_id`)
 		.eq('user_id', profile?.id)
 		.eq('status', FriendsStatus.PENDING)
 		.limit(25);
-	console.log({
-		profile,
-		session,
-		friends,
-		requests,
-		requestsError,
-		'FriendsStatus.PENDING': FriendsStatus.PENDING
-	});
+
 	return {
 		friends: friends as
 			| (GetArrayType<typeof friends> & {

@@ -17,6 +17,7 @@
 	$: ({ profile, room_key, profileId, initialMessages } = data);
 
 	let onlineUsers: Record<string, OnlinePresence> = {};
+	let usersTyping: Record<string, OnlinePresence> = {};
 	$: messages = [...(initialMessages ?? [])];
 	$: console.log({ messages, initialMessages });
 	let commentText = '';
@@ -27,6 +28,10 @@
 	let onComment = async (text: string) => {
 		console.log("Something went wrong! Please try again later. (It's not you, it's me.)");
 	};
+
+	let onTyping = async () => {};
+
+	let onTypingBlur = async () => {};
 
 	onMount(() => {
 		// Channel name can be any string.
@@ -69,7 +74,6 @@
 					messages = [...messages, message.new];
 				}
 			)
-
 			.subscribe();
 
 		// add comment action with optimistic UI
@@ -119,6 +123,53 @@
 				});
 			}
 		});
+
+		const typingChannel = supabase.channel(`${room_key}-typing`, {
+			config: {
+				presence: {
+					key: profile?.id
+				}
+			}
+		});
+
+		typingChannel.on('presence', { event: 'sync' }, () => {
+			console.log('Online users: ', typingChannel.presenceState());
+		});
+
+		typingChannel.on('presence', { event: 'join' }, ({ newPresences }) => {
+			console.log('New users have joined: ', newPresences);
+			for (const presence of newPresences) {
+				usersTyping[presence.id] = presence as OnlinePresence;
+			}
+			console.log(usersTyping);
+		});
+
+		typingChannel.on('presence', { event: 'leave' }, ({ leftPresences }) => {
+			console.log('Users have left: ', leftPresences);
+			const newUsersTyping = { ...usersTyping };
+			for (const presence of leftPresences) {
+				// remove entry from object
+				delete newUsersTyping[presence.id];
+			}
+			usersTyping = newUsersTyping;
+		});
+
+		typingChannel.subscribe(async (status) => {
+			if (status === 'SUBSCRIBED') {
+				onTyping = async () => {
+					await typingChannel.track({
+						online_at: new Date().toISOString(),
+						username: profile?.username,
+						avatar_url: profile?.avatar_url,
+						id: profile?.id
+					});
+				};
+				onTypingBlur = async () => {
+					await typingChannel.untrack();
+				};
+			}
+		});
+
 		// scroll to bottom
 		scrollContainer.scroll({
 			top: scrollContainer?.scrollHeight - scrollContainer?.offsetHeight
@@ -129,12 +180,15 @@
 			scrollPosition = scrollContainer.scrollTop;
 		});
 
-		return () => onlineChannel.untrack();
+		return () => {
+			onlineChannel.untrack();
+			typingChannel.untrack();
+		};
 	});
 	$: console.log({ onlineUsers });
 </script>
 
-<div class="flex flex-col max-h-[calc(100vh-4rem)] overflow-hidden">
+<div class="h-full flex flex-col max-h-[calc(100vh-4rem)] overflow-hidden">
 	<div class="px-4 py-2 flex flex-col bg-base-200">
 		<h2 class="text-lg">Online</h2>
 		<div class="flex gap-2">
@@ -146,7 +200,10 @@
 		</div>
 	</div>
 	<div class="relative flex-grow overflow-hidden flex">
-		<div bind:this={scrollContainer} class="flex-grow px-2 pt-4 overflow-y-scroll">
+		<div
+			bind:this={scrollContainer}
+			class="flex-grow flex flex-col w-full px-2 pt-4 overflow-y-scroll justify-end"
+		>
 			{#each messages as { id, text, sender_id, created_at }, idx (id)}
 				<ChatMessage
 					text={text ?? ''}
@@ -198,6 +255,14 @@
 		</div>
 	</div>
 
+	{#if Object.keys(usersTyping).length > 0}
+		<p>
+			{Object.keys(usersTyping)
+				?.map((key) => usersTyping[key].username)
+				.join(', ')} are typing...
+		</p>
+	{/if}
+
 	<form
 		on:submit|preventDefault={async () => {
 			try {
@@ -210,6 +275,11 @@
 		class="px-2 py-1 w-full flex gap-2 sticky top-full"
 	>
 		<input
+			on:focus={onTyping}
+			on:blur={() => {
+				console.log('FUCK');
+				onTypingBlur();
+			}}
 			bind:value={commentText}
 			type="text"
 			placeholder="Type here"

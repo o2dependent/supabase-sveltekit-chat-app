@@ -21,7 +21,6 @@
 		const newSearchedFriends = await searchFriends(value, profile);
 		searchedFriends = newSearchedFriends ?? [];
 		friendsLoading = false;
-		console.log({ searchedFriends });
 	};
 
 	let timer: NodeJS.Timeout;
