@@ -1,9 +1,8 @@
 <script lang="ts">
+	import { session } from './session.store';
+	import { profile } from './profile.store';
 	import Avatar from '$lib/profile/Avatar.svelte';
 	import '../app.postcss';
-	import type { PageData } from './$types';
-
-	export let data: PageData;
 
 	let open = false;
 </script>
@@ -33,13 +32,9 @@
 				<div class="flex-1 px-2 mx-2">Navbar Title</div>
 				<div class="flex-none hidden lg:block">
 					<ul class="menu menu-horizontal">
-						{#if data?.session && data?.profile}
-							<Avatar
-								full_name={data?.profile?.full_name}
-								avatar_url={data?.profile?.avatar_url}
-								online
-							/>
-							<li>@{data.profile?.username}</li>
+						{#if $session && $profile}
+							<Avatar full_name={$profile?.full_name} avatar_url={$profile?.avatar_url} online />
+							<li>@{$profile?.username}</li>
 						{:else}
 							<!-- Navbar menu content here -->
 							<li><a on:click={() => (open = false)} href="/login">Login</a></li>
@@ -56,15 +51,11 @@
 	<div class="drawer-side">
 		<label for="my-drawer-3" class="drawer-overlay" />
 		<ul class="menu p-4 w-80 bg-base-100">
-			{#if data?.session && data?.profile}
+			{#if $session && $profile}
 				<div>
 					<span class="flex gap-4">
-						<Avatar
-							full_name={data?.profile?.full_name}
-							avatar_url={data?.profile?.avatar_url}
-							online
-						/>
-						<p>@{data.profile?.username}</p>
+						<Avatar full_name={$profile?.full_name} avatar_url={$profile?.avatar_url} online />
+						<p>@{$profile?.username}</p>
 					</span>
 				</div>
 				<li>

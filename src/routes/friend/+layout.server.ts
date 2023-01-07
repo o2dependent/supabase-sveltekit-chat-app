@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 import { supabase } from '$lib/supabaseClient';
-import { FriendsStatus } from '$types/friends-status.d';
+import { FriendsStatus } from '$types/friends-status';
 
 type GetArrayType<T> = T extends (infer U)[] ? U : never;
 

@@ -14,5 +14,7 @@ export const load: PageLoad = async ({ params, parent }) => {
 		.eq('room_key', room_key)
 		.order('created_at', { ascending: true });
 
+	console.log({ initialMessages });
+
 	return { profileId, room_key, initialMessages };
 };

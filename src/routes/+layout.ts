@@ -1,8 +1,10 @@
 import type { LayoutLoad } from './$types';
-import { getSupabase } from '@supabase/auth-helpers-sveltekit';
+import { session } from './session.store';
+import { profile } from './profile.store';
 
-export const load: LayoutLoad = async (event) => {
-	const { session } = await getSupabase(event);
+export const load: LayoutLoad = async ({ data }) => {
+	session.set(data?.session ?? null);
+	profile.set(data?.profile ?? null);
 
-	return { session, profile: event?.data?.profile ?? null };
+	return { session: data?.session ?? null, profile: data?.profile ?? null };
 };

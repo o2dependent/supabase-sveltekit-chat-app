@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { supabase } from '$lib/supabaseClient';
-	import { FriendsStatus } from '$types/friends-status.d';
+	import { FriendsStatus } from '$types/friends-status';
 	import type { PageData } from './$types';
 	import FriendRequestWrapper from './FriendRequestWrapper.svelte';
 

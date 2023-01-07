@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { searchFriends } from './searchFriends';
 	import type { PageData } from './$types';
-	import { FriendsStatus } from '$types/friends-status.d';
+	import { FriendsStatus } from '$types/friends-status';
 	import Avatar from '$lib/profile/Avatar.svelte';
 	import { supabase } from '$lib/supabaseClient';
 
