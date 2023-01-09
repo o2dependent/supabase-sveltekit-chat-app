@@ -30,7 +30,10 @@ export const subscribeToFriendsChannel = () => {
 		)
 		.subscribe();
 
-	return () => {
-		channel.unsubscribe();
+	return {
+		channel,
+		unsubscribe: () => {
+			channel.unsubscribe();
+		}
 	};
 };

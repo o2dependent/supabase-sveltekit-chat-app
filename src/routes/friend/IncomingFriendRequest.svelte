@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { supabase } from '$lib/supabaseClient';
 	import { FriendsStatus } from '$types/friends-status';
+	import { profile } from '../profile.store';
 	import type { PageData } from './$types';
 	import FriendRequestWrapper from './FriendRequestWrapper.svelte';
 
@@ -9,7 +10,6 @@
 	export let username: string;
 	export let request_id: number;
 	export let sender_id: string;
-	export let profile: PageData['profile'];
 
 	const addFriend = async () => {
 		const { data, error } = await supabase
@@ -21,7 +21,7 @@
 
 		const { data: user_friend, error: user_friend_error } = await supabase.from('friends').insert([
 			{
-				requester_id: profile?.id,
+				requester_id: $profile?.id,
 				user_id: sender_id,
 				status: FriendsStatus.ACCEPTED
 			}

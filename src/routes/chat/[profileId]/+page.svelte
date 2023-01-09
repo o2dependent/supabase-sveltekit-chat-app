@@ -4,29 +4,34 @@
 	import { supabase } from '$lib/supabaseClient';
 	import type { Database } from '$types/supabase';
 	import type { RealtimePresenceState } from '@supabase/supabase-js';
+	import { profile } from '../../profile.store';
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import type { PageData } from './$types';
+	import { subscribeToMessagesChannel } from './messages-channel';
+	import { messages } from './messages.store';
+	import { subscribeToOnlineChattersChannel } from './online-chatters-channel';
+	import { subscribeToUserTypingChannel } from './user-typing-channel';
 
 	export let data: PageData;
 
-	type DirectMessage = Database['public']['Tables']['direct_messages']['Row'];
 	type Presence = RealtimePresenceState[''][0];
 	type OnlinePresence = Presence & { username: string; avatar_url: string };
 
-	$: ({ profile, room_key, profileId, initialMessages } = data);
+	$: ({ room_key, profileId } = data);
 
 	let onlineUsers: Record<string, OnlinePresence> = {};
 	let usersTyping: Record<string, OnlinePresence> = {};
-	$: messages = [...(initialMessages ?? [])];
-	$: console.log({ messages, initialMessages });
 	let commentText = '';
 
 	let scrollContainer: HTMLDivElement;
 	let scrollPosition = 0;
 
-	let onComment = async (text: string) => {
-		console.log("Something went wrong! Please try again later. (It's not you, it's me.)");
+	// add comment action with optimistic UI
+	const onComment = async (text: string) => {
+		const { data } = await supabase
+			.from('direct_messages')
+			.insert({ receiver_id: profileId, sender_id: $profile?.id, text, room_key });
 	};
 
 	let onTyping = async () => {};
@@ -36,139 +41,32 @@
 	onMount(() => {
 		// Channel name can be any string.
 		// Create channels with the same name for both the broadcasting and receiving clients.
-		const channel = supabase.channel(room_key);
-
-		// Supabase client setup
-		// Listen to broadcast messages.
-		// channel
-		// 	.on('broadcast', { event: 'message' }, ({ payload }) => {
-		// 		messages = [...messages, { ...payload, sent_at: new Date(payload.sent_at) }];
-		// 	})
-		// 	.subscribe((status) => {
-		// 		console.log({ status });
-		// 		if (status === 'SUBSCRIBED') {
-		// 			// do something that needs to be done when subscribed
-		// 		}
-		// 	});
-
-		channel
-			.on<DirectMessage>(
-				'postgres_changes',
-				{
-					event: 'INSERT',
-					schema: 'public',
-					table: 'direct_messages',
-					filter: `room_key=eq.${room_key}`
-				},
-				(message) => {
-					if (message.new.sender_id === profile?.id) {
-						setTimeout(() => {
-							const top = scrollContainer?.scrollHeight - scrollContainer?.offsetHeight;
-							const behavior = top - scrollPosition >= 2000 ? 'auto' : 'smooth';
-							scrollContainer.scroll({
-								top,
-								behavior
-							});
-						}, 500);
-					}
-					messages = [...messages, message.new];
-				}
-			)
-			.subscribe();
-
-		// add comment action with optimistic UI
-		onComment = async (text) => {
-			const { data } = await supabase
-				.from('direct_messages')
-				.insert({ receiver_id: profileId, sender_id: profile?.id, text, room_key });
-		};
-
-		const onlineChannel = supabase.channel(`${room_key}-online-users`, {
-			config: {
-				presence: {
-					key: profile?.id
-				}
-			}
-		});
-
-		onlineChannel.on('presence', { event: 'sync' }, () => {
-			console.log('Online users: ', onlineChannel.presenceState());
-		});
-
-		onlineChannel.on('presence', { event: 'join' }, ({ newPresences }) => {
-			console.log('New users have joined: ', newPresences);
-			for (const presence of newPresences) {
-				onlineUsers[presence.id] = presence as OnlinePresence;
-			}
-			console.log(onlineUsers);
-		});
-
-		onlineChannel.on('presence', { event: 'leave' }, ({ leftPresences }) => {
-			console.log('Users have left: ', leftPresences);
-			const newOnlineUsers = { ...onlineUsers };
-			for (const presence of leftPresences) {
-				// remove entry from object
-				delete newOnlineUsers[presence.id];
-			}
-			onlineUsers = newOnlineUsers;
-		});
-
-		onlineChannel.subscribe(async (status) => {
-			if (status === 'SUBSCRIBED') {
-				const status = await onlineChannel.track({
-					online_at: new Date().toISOString(),
-					username: profile?.username,
-					avatar_url: profile?.avatar_url,
-					id: profile?.id
+		const messagesChannel = subscribeToMessagesChannel(room_key, () => {
+			setTimeout(() => {
+				const top = scrollContainer?.scrollHeight - scrollContainer?.offsetHeight;
+				const behavior = top - scrollPosition >= 2000 ? 'auto' : 'smooth';
+				scrollContainer.scroll({
+					top,
+					behavior
 				});
-			}
+			}, 500);
 		});
 
-		const typingChannel = supabase.channel(`${room_key}-typing`, {
-			config: {
-				presence: {
-					key: profile?.id
-				}
-			}
-		});
+		const onlineChattersChannel = subscribeToOnlineChattersChannel(room_key);
 
-		typingChannel.on('presence', { event: 'sync' }, () => {
-			console.log('Online users: ', typingChannel.presenceState());
-		});
+		const typingChannel = subscribeToUserTypingChannel(room_key);
 
-		typingChannel.on('presence', { event: 'join' }, ({ newPresences }) => {
-			console.log('New users have joined: ', newPresences);
-			for (const presence of newPresences) {
-				usersTyping[presence.id] = presence as OnlinePresence;
-			}
-			console.log(usersTyping);
-		});
-
-		typingChannel.on('presence', { event: 'leave' }, ({ leftPresences }) => {
-			console.log('Users have left: ', leftPresences);
-			const newUsersTyping = { ...usersTyping };
-			for (const presence of leftPresences) {
-				// remove entry from object
-				delete newUsersTyping[presence.id];
-			}
-			usersTyping = newUsersTyping;
-		});
-
-		typingChannel.subscribe(async (status) => {
-			if (status === 'SUBSCRIBED') {
-				onTyping = async () => {
-					await typingChannel.track({
-						online_at: new Date().toISOString(),
-						username: profile?.username,
-						avatar_url: profile?.avatar_url,
-						id: profile?.id
-					});
-				};
-				onTypingBlur = async () => {
-					await typingChannel.untrack();
-				};
-			}
-		});
+		onTyping = async () => {
+			await typingChannel.channel.track({
+				online_at: new Date().toISOString(),
+				username: $profile?.username,
+				avatar_url: $profile?.avatar_url,
+				id: $profile?.id
+			});
+		};
+		onTypingBlur = async () => {
+			await typingChannel.channel.untrack();
+		};
 
 		// scroll to bottom
 		scrollContainer.scroll({
@@ -181,11 +79,11 @@
 		});
 
 		return () => {
-			onlineChannel.untrack();
-			typingChannel.untrack();
+			messagesChannel.unsubscribe();
+			onlineChattersChannel.unsubscribe();
+			typingChannel.unsubscribe();
 		};
 	});
-	$: console.log({ onlineUsers });
 </script>
 
 <div class="h-full flex flex-col max-h-[calc(100vh-4rem)] overflow-hidden">
@@ -204,15 +102,15 @@
 			bind:this={scrollContainer}
 			class="flex-grow flex flex-col w-full px-2 pt-4 overflow-y-scroll justify-end"
 		>
-			{#each messages as { id, text, sender_id, created_at }, idx (id)}
+			{#each $messages as { id, text, sender_id, created_at }, idx (id)}
 				<ChatMessage
 					text={text ?? ''}
 					avatar_url={onlineUsers[sender_id ?? '']?.avatar_url}
 					full_name={onlineUsers[sender_id ?? '']?.username}
 					sent_at={new Date(created_at ?? '')}
-					is_me={sender_id === profile?.id}
-					is_next_sender={sender_id === (messages?.[idx + 1]?.sender_id ?? '')}
-					is_previous_sender={sender_id === (messages?.[idx - 1]?.sender_id ?? '')}
+					is_me={sender_id === $profile?.id}
+					is_next_sender={sender_id === ($messages?.[idx + 1]?.sender_id ?? '')}
+					is_previous_sender={sender_id === ($messages?.[idx - 1]?.sender_id ?? '')}
 				/>
 			{/each}
 			{#if scrollPosition < scrollContainer?.scrollHeight - scrollContainer?.offsetHeight - 150}

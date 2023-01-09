@@ -1,5 +1,6 @@
 import { supabase } from '$lib/supabaseClient';
 import type { PageLoad } from './$types';
+import { messages } from './messages.store';
 
 export const load: PageLoad = async ({ params, parent }) => {
 	const { profile } = await parent();
@@ -14,7 +15,7 @@ export const load: PageLoad = async ({ params, parent }) => {
 		.eq('room_key', room_key)
 		.order('created_at', { ascending: true });
 
-	console.log({ initialMessages });
+	messages.set(initialMessages ?? []);
 
-	return { profileId, room_key, initialMessages };
+	return { profileId, room_key };
 };

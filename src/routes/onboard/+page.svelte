@@ -1,11 +1,10 @@
 <script lang="ts">
+	import { session } from '../session.store';
 	import { goto } from '$app/navigation';
 	import LabeledTextInput from '$lib/inputs/LabeledTextInput.svelte';
 	import { supabase } from '$lib/supabaseClient';
 	import type { PageData } from './$types';
 	import AvatarUpload from './AvatarUpload.svelte';
-
-	export let data: PageData;
 
 	let loading = false;
 	let username = '';
@@ -16,11 +15,11 @@
 		try {
 			loading = true;
 
-			if (!data?.session) {
+			if (!$session) {
 				throw new Error('You must be logged in to update your profile');
 			}
 
-			const { user } = data?.session;
+			const { user } = $session;
 
 			const { error } = await supabase.from('profiles').upsert({
 				id: user.id,

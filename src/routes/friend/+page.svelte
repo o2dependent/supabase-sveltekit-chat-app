@@ -1,7 +1,5 @@
 <script lang="ts">
 	import Avatar from '$lib/profile/Avatar.svelte';
-	import { supabase } from '$lib/supabaseClient';
-	import { FriendsStatus } from '$types/friends-status';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { subscribeToFriendsChannel } from './friends-channel';
@@ -9,13 +7,13 @@
 
 	export let data: PageData;
 
-	$: ({ friends, requests, profile } = data);
+	$: ({ friends, requests } = data);
 
 	onMount(() => {
-		const unsubscribeToFriendsChannel = subscribeToFriendsChannel();
+		const friendsChannel = subscribeToFriendsChannel();
 
 		return () => {
-			unsubscribeToFriendsChannel();
+			friendsChannel.unsubscribe();
 		};
 	});
 </script>
@@ -37,7 +35,7 @@
 {/each}
 
 {#each $requests ?? [] as { id: request_id, sender: { avatar_url, username, id: sender_id, full_name } } (request_id)}
-	<IncomingFriendRequest {profile} {sender_id} {full_name} {request_id} {avatar_url} {username} />
+	<IncomingFriendRequest {sender_id} {full_name} {request_id} {avatar_url} {username} />
 {:else}
 	<p class="text-center">No requests yet</p>
 {/each}
